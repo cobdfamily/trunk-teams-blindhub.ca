@@ -1,18 +1,22 @@
 # BlindHub main menu.
 #
-# `prompt` plays inside the <Gather> so the first DTMF
-# interrupts. The audio is a single recording that combines
-# the welcome and the menu options ("Welcome to BlindHub.
-# Press 1 for ...") -- the v5.7.6 `greeting:` slot is
-# available if a future re-record splits welcome and prompt
-# into separate WAVs.
+# Two-WAV layout (trunk v5.7.6+ greeting/prompt split):
+#
+#   greeting   plays ONCE before the <Gather> on a fresh
+#              menu hit (no Digits). Skipped on
+#              invalid-digit replays so a caller who
+#              fat-fingers doesn't sit through the 24-second
+#              welcome again.
+#   prompt     short menu-options narration, played inside
+#              the <Gather> so the first DTMF interrupts.
 #
 # Cross-tenant options (cobd.ca's operator extensions + main
 # menu) point at absolute URLs back to the cobd.ca tenant
 # slot -- same trunk instance, different team. Internal
 # options (/documents/...) resolve under THIS team's
 # base_url.
-prompt: /audio/greeting.wav
+greeting: /audio/greeting.wav
+prompt: /audio/mainmenu.wav
 numDigits: 3
 options:
   '1': /documents/bh-en-coming-soon
