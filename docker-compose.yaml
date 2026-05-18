@@ -1,0 +1,55 @@
+# End-to-end test stack for the trunk-teams-blindhub.ca tree.
+#
+# Brings up the cobdfamily/trunk image with THIS REPO bind-
+# mounted at /app/data/teams/blindhub.ca. tests/test_e2e.py
+# walks the menu path through trunk to lock the rendered
+# TwiML against the live blindhub.ca data tree.
+#
+# Bind-mount path is the team's slot inside trunk's data tree
+# -- NOT /app/data, which would shadow the trunk image's
+# built-in /app/data/templates (shared rendering templates
+# baked in since trunk v5.7.0).
+#
+# blindhub.ca references no publications, no PBX of its own,
+# and no extensions. The menu's operator-dial options redirect
+# to absolute URLs on the cobd.ca tenant, so a single-team
+# test stack like this one can't exercise the cross-tenant
+# hops -- they 302 back to phone.apps.blindhub.ca/v1/teams/
+# cobd.ca/... which doesn't resolve inside this compose. The
+# E2E tests focus on the menu render itself and assert the
+# redirects are well-formed XML; the cross-tenant resolution
+# is covered in cobdfamily/trunk-teams-cobd.ca's suite.
+#
+# Run locally:
+#   docker compose up -d
+#   pip install -r tests/requirements.txt
+#   python3 -m pytest tests/test_e2e.py -v
+#   docker compose down -v
+
+services:
+  trunk:
+    image: kibble.apps.blindhub.ca/cobdfamily/trunk:${TRUNK_TAG:-latest}
+    container_name: trunk-teams-blindhub-ca-trunk
+    ports:
+      - "${TRUNK_HTTP_PORT:-1962}:1962"
+    environment:
+      TRUNK_CONFIG: /app/config.yaml
+    volumes:
+      # One repo == one team. Mount the repo root at
+      # /app/data/teams/blindhub.ca so the trunk image's
+      # baked-in /app/data/templates stays visible -- a
+      # whole-/app/data mount would shadow it.
+      # Read-only -- trunk never writes here.
+      - ./:/app/data/teams/blindhub.ca:ro
+      - ./tests/trunk-config.yaml:/app/config.yaml:ro
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:1962/', timeout=2).status==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped

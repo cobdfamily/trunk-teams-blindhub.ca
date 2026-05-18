@@ -1,0 +1,16 @@
+# Team-level config for blindhub.ca.
+#
+# The blindhub.ca tenant has no PBX of its own -- its menu's
+# operator-dial options (0, 9) cross-tenant-redirect to
+# cobd.ca's PBX-backed extensions. No ``pbx:`` block needed
+# here; if blindhub.ca later wires up its own SignalWire
+# trunk, add the block per trunk's SCHEMA.md.
+#
+# Twilio / SignalWire signature verification is OFF until the
+# operator wires real tokens. Trunk reads this file lazily on
+# each request -- edits land on the next call without a
+# restart.
+
+signature_verification:
+  enabled: false
+  auth_tokens: []

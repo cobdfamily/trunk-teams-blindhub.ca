@@ -1,0 +1,79 @@
+name: test
+
+# Boots the docker-compose stack (cobdfamily/trunk from
+# kibble.apps.blindhub.ca, with this checkout bind-mounted
+# at /app/data/teams/blindhub.ca inside the trunk container)
+# and runs the E2E tests at tests/test_e2e.py. The kibble
+# registry speaks plain HTTP, so the runner's docker daemon
+# is reconfigured with kibble as an insecure-registry before
+# pulling.
+#
+# This stack has no talkshow service (blindhub.ca's menu has
+# no publication routes) -- it's just trunk + the bind-mount.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Nightly catches a trunk:latest regression that breaks
+  # rendering of this data tree within ~24h. 07:15 UTC,
+  # offset 15 min from the trunk-teams-cobd.ca nightly so the
+  # pair don't compete for kibble pulls.
+  schedule:
+    - cron: "15 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: configure docker for plain-HTTP kibble registry
+        run: |
+          sudo mkdir -p /etc/docker
+          echo '{"insecure-registries":["kibble.apps.blindhub.ca"]}' \
+            | sudo tee /etc/docker/daemon.json >/dev/null
+          sudo systemctl restart docker
+          for i in $(seq 1 30); do
+            docker info >/dev/null 2>&1 && break
+            sleep 1
+          done
+
+      - name: pull compose images
+        run: docker compose pull
+
+      - name: bring up stack
+        run: docker compose up -d
+
+      - name: install python test deps
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r tests/requirements.txt
+
+      - name: wait for trunk healthy
+        run: |
+          # Single-service stack -- only need trunk's port.
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:1962/ >/dev/null 2>&1; then
+              echo "stack ready"; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::stack failed to come up in 120s"
+          docker compose ps
+          docker compose logs --tail=80
+          exit 1
+
+      - name: run E2E tests
+        run: python3 -m pytest tests/test_e2e.py -v
+
+      - name: dump logs on failure
+        if: failure()
+        run: docker compose logs --tail=200
+
+      - name: tear down
+        if: always()
+        run: docker compose down -v

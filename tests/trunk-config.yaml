@@ -1,0 +1,27 @@
+# Test config for the trunk-teams-cobd.ca E2E suite.
+#
+# Trunk reads /app/data as its data root. docker-compose
+# layers THIS repo's contents into /app/data/teams/cobd.ca,
+# while the trunk image's built-in /app/data/templates
+# (shipped since trunk v5.7.0) stays visible -- the mount
+# target is the team slot, NOT /app/data, so no shadowing.
+# Request-log middleware is off so test output stays readable.
+
+server:
+  host: 0.0.0.0
+  port: 1962
+
+# Trunk's data root inside the container.
+app_data: /app/data
+
+# Empty -> trunk falls through to the request's own scheme + host
+# when rendering URLs. Tests fix the host via X-Forwarded-Host so
+# they don't need to know the runner's network shape.
+public_base_url: ""
+
+voicemail:
+  postmark_token: ""
+
+logging:
+  json_format: false
+  request_log: false
