@@ -15,7 +15,7 @@
 # slot -- same trunk instance, different team. Internal
 # options (/documents/...) resolve under THIS team's
 # base_url.
-greeting: /audio/greeting.wav
+greeting: /audio/blindhub-greeting.wav
 prompt: /audio/mainmenu.wav
 numDigits: 3
 options:

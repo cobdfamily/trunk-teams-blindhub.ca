@@ -65,7 +65,7 @@ def test_mainmenu_renders_with_prompt():
     assert r.headers["content-type"].startswith("application/xml")
     body = r.text
     assert "<Gather " in body
-    assert "/v1/teams/blindhub.ca/audio/greeting.wav" in body
+    assert "/v1/teams/blindhub.ca/audio/blindhub-greeting.wav" in body
     # No accidental cobd.ca audio path leaked through.
     assert "/v1/teams/cobd.ca/audio/" not in body
 
@@ -101,7 +101,7 @@ def test_audio_served_under_team_slot():
     WAVs the deploy depends on. Audio is binary; we don't
     parse it, just verify a 200 + non-empty body."""
     r = requests.get(
-        TRUNK_BASE_URL + "/v1/teams/blindhub.ca/audio/greeting.wav",
+        TRUNK_BASE_URL + "/v1/teams/blindhub.ca/audio/blindhub-greeting.wav",
         headers=PROXY_HEADERS,
         timeout=10,
     )

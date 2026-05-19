@@ -1,0 +1,21 @@
+# Language selector for blindhub.ca.
+#
+# Mirrors the shape of cobd.ca's languages.yaml: prompt
+# (welcome + "press N for X" rolled into one) and a small
+# options dict where each top-level digit picks a language
+# or routes to an operator.
+#
+# Entry point: cobd.ca extension 482's redirect_url drops
+# the caller here (trunk v5.7.22). Anyone hitting this URL
+# directly (eventually: blindhub.ca's own DID at the
+# SignalWire layer) lands here too.
+#
+# Only option 1 (English -> mainmenu.en) is wired today.
+# Add more languages (e.g. '2' for French, similar to
+# cobd.ca's /documents/support-french) when the recordings
+# are ready.
+prompt: /audio/blindhub-greeting.wav
+numDigits: 3
+timeout: 2
+options:
+  '1': /menus/mainmenu.en

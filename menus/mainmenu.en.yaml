@@ -1,0 +1,23 @@
+# Blindhub English main menu.
+#
+# Reached from /menus/languages option 1. The existing
+# /menus/mainmenu.yaml stays in place as the
+# language-selector flow for direct callers (until that
+# tenant's DID is wired to /menus/languages instead).
+#
+# Operator + cross-tenant options mirror the existing
+# mainmenu.yaml so a caller has a way out to cobd.ca's
+# PBX. English-specific content options (1-7) need
+# recordings + destinations -- left out of this stub.
+prompt: /audio/mainmenu.wav
+numDigits: 3
+timeout: 7
+options:
+  # Back to the language selector.
+  '8': /menus/languages
+  # Cross-tenant: cobd.ca's main IVR.
+  '9': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/menus/mainmenu
+  # Operator at cobd.ca.
+  '0': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/100
+  # Direct dial to cobd.ca ext 052.
+  '3': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/052
