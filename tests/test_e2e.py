@@ -5,13 +5,12 @@ trunk serving from this checkout (bind-mounted at
 /app/data/teams/blindhub.ca).
 
 The tests walk the menu render Twilio hits and verify the
-rendered TwiML. blindhub.ca's mainmenu has only one
-"internal" path (`/documents/bh-en-coming-soon` -- currently
-404s because the document hasn't been authored yet) plus
-cross-tenant redirects to cobd.ca for the operator-dial
-options. We assert the menu shape; the cross-tenant
-resolution is covered in cobdfamily/trunk-teams-cobd.ca's
-test suite.
+rendered TwiML. blindhub.ca's entry-point menu is
+``/menus/languages`` (since the mainmenu.yaml split into a
+language-selector + English main menu in May 2026). Options
+mostly cross-tenant-redirect to cobd.ca for the operator-
+dial flows; we assert the menu shape here, cross-tenant
+resolution is covered in trunk-teams-cobd.ca's test suite.
 """
 
 from __future__ import annotations
@@ -56,11 +55,12 @@ def test_trunk_liveness():
     assert body["version"]
 
 
-def test_mainmenu_renders_with_prompt():
-    """Fresh menu hit (no Digits) emits a Gather with the
-    prompt audio inside. Pins the audio path resolves under
-    the blindhub.ca base_url (not cobd.ca's)."""
-    r = _post("/v1/teams/blindhub.ca/menus/mainmenu")
+def test_languages_renders_with_prompt():
+    """Fresh hit on the entry-point menu (no Digits) emits a
+    Gather with the prompt audio inside. Pins the audio
+    path resolves under the blindhub.ca base_url (not
+    cobd.ca's)."""
+    r = _post("/v1/teams/blindhub.ca/menus/languages")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("application/xml")
     body = r.text
@@ -70,11 +70,11 @@ def test_mainmenu_renders_with_prompt():
     assert "/v1/teams/cobd.ca/audio/" not in body
 
 
-def test_mainmenu_cross_tenant_redirect_on_operator_digit():
+def test_languages_cross_tenant_redirect_on_operator_digit():
     """Pressing 0 routes to cobd.ca's ext 100 via an absolute
     URL. The <Redirect> body should be the literal cobd.ca
     URL -- trunk doesn't rewrite absolute URLs."""
-    r = _post("/v1/teams/blindhub.ca/menus/mainmenu", Digits="0")
+    r = _post("/v1/teams/blindhub.ca/menus/languages", Digits="0")
     assert r.status_code == 200
     body = r.text
     assert "<Redirect" in body
@@ -84,10 +84,10 @@ def test_mainmenu_cross_tenant_redirect_on_operator_digit():
     )
 
 
-def test_mainmenu_invalid_digit_replays():
+def test_languages_invalid_digit_replays():
     """Garbage DTMF emits invalid-selection + re-gathers
     against the team's audio dir, not cobd.ca's."""
-    r = _post("/v1/teams/blindhub.ca/menus/mainmenu", Digits="999")
+    r = _post("/v1/teams/blindhub.ca/menus/languages", Digits="999")
     body = r.text
     assert "<Redirect" not in body
     assert (

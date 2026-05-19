@@ -20,12 +20,12 @@ image's built-in `/app/data/templates`.
 
 ```
 audio/<file>                team-wide WAVs
-                            (greeting + mainmenu)
-team.yaml                   signature_verification (no pbx)
-menus/mainmenu.yaml         Twilio Gather config
-documents/<name>.xml.j2     (none yet -- the menu currently
-                            routes to two not-yet-implemented
-                            docs + three cross-tenant URLs)
+                            (blindhub-greeting + mainmenu)
+team.yaml                   signature_verification +
+                            team_extensions_base_url
+menus/languages.yaml        entry point. language selector
+menus/mainmenu.en.yaml      English main menu (stub)
+documents/<name>.xml.j2     (none yet)
 
 tests/                      E2E harness (test_e2e.py)
 docker-compose.yaml         brings up trunk with this repo
@@ -34,12 +34,14 @@ docker-compose.yaml         brings up trunk with this repo
 
 ## Cross-tenant routing
 
-The blindhub menu's operator-dial options
-(`0` -> ext 100, `9` -> mainmenu, `3` -> ext 052) target the
-cobd.ca tenant via absolute URLs back at
+The blindhub language-selector menu's operator-dial options
+(`0` -> ext 100, `3` -> ext 052) target the cobd.ca tenant
+via absolute URLs back at
 `phone.apps.blindhub.ca/v1/teams/cobd.ca/...`. blindhub.ca
 has no PBX of its own; it shares cobd.ca's via cross-tenant
-redirect.
+redirect. Extension lookups that miss locally fall through
+to cobd.ca's tree automatically via `team.yaml`'s
+`team_extensions_base_url`.
 
 This works because both tenants run on the same trunk
 instance (`phone.apps.blindhub.ca`), so a redirect from one

@@ -19,3 +19,8 @@ numDigits: 3
 timeout: 2
 options:
   '1': /menus/mainmenu.en
+  # Cross-tenant operator routing. Carried over from the
+  # now-deleted /menus/mainmenu so callers still have an
+  # easy way out to cobd.ca's PBX.
+  '0': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/100
+  '3': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/052
