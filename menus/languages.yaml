@@ -2,25 +2,26 @@
 #
 # Mirrors the shape of cobd.ca's languages.yaml: prompt
 # (welcome + "press N for X" rolled into one) and a small
-# options dict where each top-level digit picks a language
-# or routes to an operator.
+# options dict where each top-level digit picks a language.
 #
 # Entry point: cobd.ca extension 482's redirect_url drops
 # the caller here (trunk v5.7.22). Anyone hitting this URL
 # directly (eventually: blindhub.ca's own DID at the
 # SignalWire layer) lands here too.
 #
-# Only option 1 (English -> mainmenu.en) is wired today.
-# Add more languages (e.g. '2' for French, similar to
-# cobd.ca's /documents/support-french) when the recordings
-# are ready.
+# Press-0 default operator is the English operator (ext 100)
+# routed via blindhub's team_extensions_base_url fallback.
+# The language-specific mainmenus each have their own
+# press-0 wired to the language-matching operator
+# (mainmenu.en -> 100, mainmenu.fr -> 033, mainmenu.es ->
+# 052) -- so a caller who picks a language THEN presses 0
+# gets the right operator.
 prompt: /audio/blindhub-greeting.wav
 numDigits: 3
 timeout: 2
 options:
   '1': /menus/mainmenu.en
-  # Cross-tenant operator routing. Carried over from the
-  # now-deleted /menus/mainmenu so callers still have an
-  # easy way out to cobd.ca's PBX.
-  '0': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/100
-  '3': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/052
+  '2': /menus/mainmenu.fr
+  '3': /menus/mainmenu.es
+  # Default-language operator (English).
+  '0': /extensions/100

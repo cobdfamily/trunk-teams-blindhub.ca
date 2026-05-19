@@ -1,0 +1,14 @@
+# BlindHub Spanish main menu.
+#
+# Reached from /menus/languages option 3. Same "coming
+# soon" shape as mainmenu.en, with the press-0 operator
+# routed to cobd.ca ext 052 (Spanish-speaking operator)
+# via blindhub's team_extensions_base_url fallback.
+prompt_text: "BlindHub estará disponible próximamente. Por favor, vuelva a llamar pronto. O, para hablar con un miembro de nuestro equipo, presione 0."
+numDigits: 3
+timeout: 7
+options:
+  # Spanish-language operator -- ext 052 on cobd.ca PBX.
+  '0': /extensions/052
+  # Back to the language selector.
+  '8': /menus/languages

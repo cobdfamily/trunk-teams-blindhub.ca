@@ -1,0 +1,18 @@
+# BlindHub French main menu.
+#
+# Reached from /menus/languages option 2. Same "coming
+# soon" shape as mainmenu.en, with the press-0 operator
+# routed to cobd.ca ext 033 (French-speaking operator)
+# via blindhub's team_extensions_base_url fallback.
+#
+# Brian Multilingual auto-detects French from the text;
+# no per-menu language override needed beyond the prompt
+# text itself.
+prompt_text: "BlindHub arrive bientôt. Veuillez rappeler prochainement. Ou, pour parler à un membre de notre équipe, appuyez sur 0."
+numDigits: 3
+timeout: 7
+options:
+  # French-language operator -- ext 033 on cobd.ca PBX.
+  '0': /extensions/033
+  # Back to the language selector.
+  '8': /menus/languages

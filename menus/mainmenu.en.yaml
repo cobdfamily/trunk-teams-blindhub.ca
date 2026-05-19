@@ -1,23 +1,26 @@
-# Blindhub English main menu.
+# BlindHub English main menu.
 #
-# Reached from /menus/languages option 1. The existing
-# /menus/mainmenu.yaml stays in place as the
-# language-selector flow for direct callers (until that
-# tenant's DID is wired to /menus/languages instead).
+# Reached from /menus/languages option 1. Until the
+# English content options are recorded, the menu just
+# tells the caller BlindHub is "coming soon" and routes
+# operator-dial (0) to cobd.ca ext 100 via blindhub's
+# team_extensions_base_url fallback.
 #
-# Operator + cross-tenant options mirror the existing
-# mainmenu.yaml so a caller has a way out to cobd.ca's
-# PBX. English-specific content options (1-7) need
-# recordings + destinations -- left out of this stub.
-prompt: /audio/mainmenu.wav
+# prompt_text is TTS via talkshow; voice + multilingual
+# auto-detection comes from team.yaml's talkshow_params
+# (Brian Multilingual Neural). Inside-Gather playback
+# (trunk v5.7.15+) so a caller who knows where they're
+# going can press 0 during the prompt.
+#
+# Press 8 returns to the language selector; the
+# silent-loop guard (v5.7.23) auto-hangs after three
+# unattended renders.
+prompt_text: "BlindHub is coming soon. Please call again soon. Or, to speak to a member of our team, press 0."
 numDigits: 3
 timeout: 7
 options:
+  # English-language operator -- routes via
+  # team_extensions_base_url to cobd.ca's ext 100.
+  '0': /extensions/100
   # Back to the language selector.
   '8': /menus/languages
-  # Cross-tenant: cobd.ca's main IVR.
-  '9': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/menus/mainmenu
-  # Operator at cobd.ca.
-  '0': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/100
-  # Direct dial to cobd.ca ext 052.
-  '3': https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/052

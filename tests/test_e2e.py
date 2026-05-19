@@ -70,18 +70,78 @@ def test_languages_renders_with_prompt():
     assert "/v1/teams/cobd.ca/audio/" not in body
 
 
-def test_languages_cross_tenant_redirect_on_operator_digit():
-    """Pressing 0 routes to cobd.ca's ext 100 via an absolute
-    URL. The <Redirect> body should be the literal cobd.ca
-    URL -- trunk doesn't rewrite absolute URLs."""
+def test_languages_press_0_redirects_to_operator_extension():
+    """Pressing 0 emits a Redirect to this team's
+    /extensions/100. The actual cross-team hop to cobd.ca's
+    PBX is handled at the extension route via
+    ``team_extensions_base_url`` -- blindhub has no local
+    profile for 100, so blindhub.ca/extensions/100 302s
+    over to cobd.ca/extensions/100 on the second hop.
+    That second hop is trunk's own responsibility and is
+    covered in cobdfamily/trunk's e2e suite; here we just
+    pin the menu's emit."""
     r = _post("/v1/teams/blindhub.ca/menus/languages", Digits="0")
     assert r.status_code == 200
     body = r.text
     assert "<Redirect" in body
     assert (
-        "https://phone.apps.blindhub.ca/v1/teams/cobd.ca/extensions/100"
+        "https://phone.example/v1/teams/blindhub.ca/extensions/100"
         in body
     )
+
+
+def test_languages_press_1_2_3_routes_to_language_mainmenus():
+    """The language selector dispatches 1/2/3 to the
+    English / French / Spanish main-menus respectively.
+    Pin so a refactor that swaps the mapping doesn't sneak
+    out a French caller dialed into the English ext."""
+    cases = [
+        ("1", "mainmenu.en"),
+        ("2", "mainmenu.fr"),
+        ("3", "mainmenu.es"),
+    ]
+    for digit, target in cases:
+        r = _post("/v1/teams/blindhub.ca/menus/languages", Digits=digit)
+        body = r.text
+        assert (
+            f"https://phone.example/v1/teams/blindhub.ca/menus/{target}"
+            in body
+        ), f"Digits={digit!r} did not route to {target}"
+
+
+def test_language_mainmenu_renders_tts_prompt_with_brian_voice():
+    """Each language mainmenu uses ``prompt_text`` (TTS via
+    talkshow) and inherits the team's Brian Multilingual
+    voice param. Hit one of them and assert the resulting
+    Play URL points at talkshow's /v1/speak with
+    voice=...&text=... wired up."""
+    r = _post("/v1/teams/blindhub.ca/menus/mainmenu.en")
+    body = r.text
+    # Talkshow base URL comes from team.yaml.
+    assert "newsline.apps.blindhub.ca/v1/speak?" in body, body
+    # Brian Multilingual is the team-default voice.
+    assert "voice=en-US-BrianMultilingualNeural" in body, body
+    # text= must reflect the English prompt.
+    assert "BlindHub" in body  # word in URL-encoded form
+
+
+def test_language_mainmenu_press_0_routes_to_language_extension():
+    """English / French / Spanish mainmenus each press-0 to
+    the operator extension for that language. Pin the
+    mapping so a future menu edit doesn't accidentally
+    cross-route (e.g. French caller -> Spanish operator)."""
+    cases = [
+        ("mainmenu.en", "100"),
+        ("mainmenu.fr", "033"),
+        ("mainmenu.es", "052"),
+    ]
+    for menu, ext in cases:
+        r = _post(f"/v1/teams/blindhub.ca/menus/{menu}", Digits="0")
+        body = r.text
+        assert (
+            f"https://phone.example/v1/teams/blindhub.ca/extensions/{ext}"
+            in body
+        ), f"{menu} press-0 didn't route to ext {ext}"
 
 
 def test_languages_invalid_digit_replays():
