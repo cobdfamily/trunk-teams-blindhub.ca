@@ -14,3 +14,17 @@
 signature_verification:
   enabled: false
   auth_tokens: []
+
+# v5.7.21: when a request to /v1/teams/blindhub.ca/extensions/N
+# (direct hit OR a menu dial-through) finds no local
+# profile.yaml, trunk 302s here -- onto cobd.ca's extension
+# tree on the same trunk. Saves us from copy-pasting every
+# extensions/<n>/profile.yaml across two repos.
+#
+# Origin-relative shape so the value isn't pinned to a
+# specific public hostname (works for the prod hostname,
+# staging, dev, anywhere this trunk runs). The bare-team-
+# name shape (`cobd.ca`) would also work; explicit
+# /v1/teams/... makes the destination obvious to anyone
+# reading the file.
+team_extensions_base_url: /v1/teams/cobd.ca
