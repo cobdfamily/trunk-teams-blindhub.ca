@@ -86,14 +86,25 @@ def test_languages_cross_tenant_redirect_on_operator_digit():
 
 def test_languages_invalid_digit_replays():
     """Garbage DTMF emits invalid-selection + re-gathers
-    against the team's audio dir, not cobd.ca's."""
-    r = _post("/v1/teams/blindhub.ca/menus/languages", Digits="999")
+    against the team's audio dir, not cobd.ca's.
+
+    Uses a 2-digit press to stay below trunk's 3-/4-digit
+    dial-through regex -- with team_extensions_base_url
+    pointing at cobd.ca, a 3-digit press would dial-through
+    instead of falling to invalid-selection. v5.7.23 also
+    adds a trailing silent-loop <Redirect> on every menu
+    render; the test allows for that but pins the absence
+    of a dispatch redirect to any /extensions/<n> target."""
+    r = _post("/v1/teams/blindhub.ca/menus/languages", Digits="99")
     body = r.text
-    assert "<Redirect" not in body
+    assert "<Gather " in body
     assert (
         "/v1/teams/blindhub.ca/audio/invalid-selection.wav" in body
     )
-    assert "<Gather " in body
+    # No dispatch redirect -- the only <Redirect> is the
+    # silent-loop self-loop with ?attempt=1.
+    assert "/extensions/" not in body
+    assert "?attempt=1</Redirect>" in body
 
 
 def test_audio_served_under_team_slot():

@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Pre-push gate: refuse to push if the E2E tests don't pass
+# locally. Mirrors what CI runs on main, just earlier in the
+# loop so broken renders never reach the remote.
+#
+# Activate once per clone with:
+#
+#     git config core.hooksPath .githooks
+#
+# Emergency override (use sparingly):
+#
+#     SKIP_E2E=1 git push
+#
+# The hook brings up the docker-compose stack, runs pytest,
+# and tears the stack down -- about a 30-second overhead per
+# push.
+
+set -euo pipefail
+
+if [ "${SKIP_E2E:-0}" = "1" ]; then
+  echo "[pre-push] SKIP_E2E=1 -- skipping E2E gate. Push at your own risk."
+  exit 0
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+echo "[pre-push] running E2E tests against local docker-compose stack..."
+
+cleanup() {
+  docker compose down -v >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+docker compose pull --quiet
+docker compose up -d --quiet-pull >/dev/null
+
+# Wait for trunk to answer health check. Same poll loop as
+# .github/workflows/test.yml.
+for _ in $(seq 1 60); do
+  if curl -fsS http://127.0.0.1:1962/ >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+if [ ! -d tests/.venv ]; then
+  python3 -m venv tests/.venv
+fi
+tests/.venv/bin/pip install --quiet --upgrade pip
+tests/.venv/bin/pip install --quiet -r tests/requirements.txt
+tests/.venv/bin/python -m pytest tests/test_e2e.py -q

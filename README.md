@@ -108,6 +108,22 @@ docker compose down -v
 PR, and nightly at 07:15 UTC (offset from cobd.ca's 07:00
 nightly so they don't compete for kibble pulls).
 
+### Pre-push gate
+
+A tracked `pre-push` hook in `.githooks/` runs the same E2E
+stack locally before a push reaches the remote. Activate
+once per clone:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+After that, `git push` brings the docker-compose stack up,
+runs the tests, tears the stack down, and refuses to push
+if anything fails. ~30s overhead per push. Override for
+emergencies (broken Docker, urgent rollback) with
+`SKIP_E2E=1 git push` -- use sparingly.
+
 ## License
 
 AGPL-3.0 — see `LICENSE`.
