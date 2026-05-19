@@ -25,6 +25,21 @@ fi
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
+# v0.x: schema validation runs first -- it's fast (~1s)
+# and catches operator typos in YAML before we spin up
+# the full docker stack to discover them at render time.
+# cobd-cli is expected next to this repo by default
+# (sibling under Microservices/) but COBD_CLI overrides
+# for non-standard layouts.
+COBD_CLI="${COBD_CLI:-$REPO_ROOT/../cobd-cli}"
+if [ -f "$COBD_CLI/bin/cobd.js" ]; then
+  echo "[pre-push] cobd validate ..."
+  node "$COBD_CLI/bin/cobd.js" validate "$REPO_ROOT"
+else
+  echo "[pre-push] cobd-cli not found at $COBD_CLI -- skipping schema check"
+  echo "           (set COBD_CLI=/path/to/cobd-cli to enable)"
+fi
+
 echo "[pre-push] running E2E tests against local docker-compose stack..."
 
 cleanup() {
