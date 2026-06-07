@@ -24,6 +24,12 @@ on:
     - cron: "15 7 * * *"
   workflow_dispatch:
 
+# Opt JS actions into Node.js 24 ahead of GitHub forcing it on
+# 2026-06-16 (Node 20 actions are deprecated). Runs the action JS
+# under Node 24 now so any incompatibility surfaces early.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
